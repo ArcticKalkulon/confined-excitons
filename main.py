@@ -29,43 +29,56 @@ Ec = TMD["Ec"]
 g1 = TMD["g1"]
 g2 = TMD["g2"]
 g3 = TMD["g3"]
-i = 0 + 1j
+imag = 0 + 1j
 
 def aw(E):
-    condition = E**2-(delta/2)**2
-    print(condition)
-    if condition >= 0:
-        r = np.sqrt(condition)/a/t
-    else:
-        r = i*np.sqrt(-condition)/a/t
-    return r
+    """
+    - in the intervall [delta/2, delta/2+V0] is the 
+      term in the square root always greater or equal to zero
+    - the output will always be purely real or zero
+    """
+    #condition = E**2-(delta/2)**2
+    # print(condition)
+    #if condition >= 0:
+    #    r = np.sqrt(condition)/a/t
+    #else:
+    #    r = i*np.sqrt(-condition)/a/t
+    #return r
+    return np.sqrt(E**2-(delta/2)**2)/a/t
         
 def av(E, V0):
+    """
+    - in the intervall [delta/2, delta/2+V0 is the 
+      term in the square root always lower or equal to zero]
+    - the output will always be purely imaginary or zero
+    """
     condition = E**2-(delta/2)**2-2*E*V0+V0**2
-    print(condition)
-    if condition >= 0:
-        r = np.sqrt(condition)/a/t
-    else:
-        r = i*np.sqrt(-condition)/a/t
-    return r
+    #if condition >= 0:
+    #    r = np.sqrt(condition)/a/t
+    #else:
+    #    r = imag*np.sqrt(-condition)/a/t
+    return imag*np.sqrt(-condition)/a/t
 
 def return_function(E, V0, r0):
     AV = av(E, V0)
     AW = aw(E)
-    left = np.real(yv(0,r0*AV))/jv(0,r0*AW)
-    right = i*AV/AW*(np.imag(yv(1,-1*r0*AV)))/(jv(1,r0*AW))
+    left = np.real(yv(0,-r0*AV))/jv(0,r0*AW)
+    right = imag*AV/AW*(E+delta/2)/(V0-E-delta/2)*(np.imag(yv(1,-r0*AV)))/(jv(1,r0*AW))
     return left-right
 
-V0 = 50e-3 #eV
-r0 = 500 #Angström
+V0 = 30e-3 #eV
+r0 = 100 #Angström
 
-x = np.linspace(0, 2*V0, 10000, endpoint=True)
+x = np.linspace(delta/2, V0+delta/2, 1000000, endpoint=True)
+x = x[1:-1]
 y = []
-for i in x:
-    y.append(return_function(i, V0, r0))
+for index, x_i in enumerate(x):
+    print(int(index/len(x)*100))
+    y.append(return_function(x_i, V0, r0))
 y = np.array(y)
+print(y)
 
-plt.plot(x/V0,y)
+plt.scatter((x-delta/2-V0)/V0,y)
 plt.ylabel("Root function")
 plt.xlabel("E/V0")
 plt.grid(True)
