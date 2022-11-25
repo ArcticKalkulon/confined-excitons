@@ -139,7 +139,7 @@ def area_plot(V0_list, r0_list, normal_axis=True, suppress_plot=True):
 
     if normal_axis:
         fig, ax = plt.subplots(1,1)
-        im = ax.pcolormesh(r0_X/10, V0_Y, EG, shading='nearest', cmap=cmap, norm=norm)
+        im = ax.pcolormesh(r0_X/10, V0_Y*1000, EG, shading='nearest', cmap=cmap, norm=norm)
         ax.set_ylabel(r'$V_0$ [meV]')
         ax.set_xlabel(r'$r_0$ [nm]')
         fig.colorbar(im, ax=ax, label=r'-1=$V_0$, 0=unconfined')
