@@ -8,7 +8,15 @@ from matplotlib.ticker import MaxNLocator
 
 
 
-data = {"MoS2": {"band gap": 1.59,
+data = {"MoSe2": {"band gap": 1.47,
+                  "a": 3.313,
+                  "t": 0.94,
+                  "Ev": None,
+                  "Ec": None,
+                  "g1": None,
+                  "g2": None,
+                  "g3": None},
+        "MoS2": {"band gap": 1.59,
                   "a": 3.19,
                   "t": 1.059,
                   "Ev": -5.86,
@@ -25,7 +33,7 @@ data = {"MoS2": {"band gap": 1.59,
                           "g2": -0.639,
                           "g3": 0.105}}
 
-TMD = data["MoS2"]
+TMD = data["MoSe2"]
 delta = TMD["band gap"]
 a = TMD["a"]
 t = TMD["t"]
@@ -83,6 +91,7 @@ def simple_plot(V0=300e-3, r0=50, suppress_plot=True): #[V0]=eV, [r0]=Angström
             continue
         elif return_function(a, V0, r0)*return_function(b, V0, r0)==0:
             root_min = np.min(np.abs([a,b]))
+            break
         else:
             root, conv = brentq(f=return_function, a=a, b=b, args=(V0,r0), full_output=True)
         if conv.converged and np.abs(return_function(root, V0=V0, r0=r0))<1e-9:
@@ -103,7 +112,7 @@ def simple_plot(V0=300e-3, r0=50, suppress_plot=True): #[V0]=eV, [r0]=Angström
 
 
 
-def area_plot(V0_list, r0_list, suppress_plot=True):
+def area_plot(V0_list, r0_list, normal_axis=True, suppress_plot=True):
     r0_list = np.array(r0_list)
     V0_list = np.array(V0_list)
     r0_X, V0_Y = np.meshgrid(r0_list, V0_list)
@@ -114,36 +123,63 @@ def area_plot(V0_list, r0_list, suppress_plot=True):
             V0 = V0_Y[i][j]
             r0 = r0_X[i][j]
             min_root = simple_plot(V0=V0, r0=r0, suppress_plot=suppress_plot)
-            EG[i][j] = (min_root-delta/2)/V0
+            if normal_axis:
+                EG[i][j] = (min_root-delta/2-V0)/V0
+            else:
+                EG[i][j] = (min_root-delta/2)/V0
             print(f'V0={V0}, r0={r0}, EG = {EG[i][j]}')
     print(EG)
     
     cmap = plt.colormaps['bone']
-    levels = MaxNLocator(nbins=11).tick_values(0,1.1)
+    if normal_axis:
+        levels = MaxNLocator(nbins=11).tick_values(-1,0.1)
+    else:
+        levels = MaxNLocator(nbins=11).tick_values(0,1.1)
     norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
 
-    
-    fig, ax = plt.subplots(1,1)
-    im = ax.pcolormesh(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', cmap=cmap, norm=norm)
-    ax.set_ylabel(r'$\frac{V_0}{\Delta}$')
-    ax.set_xlabel(r'$\frac{at}{\Delta r_0}$')
-    fig.colorbar(im, ax=ax, label='uiae')
-    fig.savefig("pcolormesh.pdf")
-    
-    fig, ax = plt.subplots(1,1)
-
-    im = ax.contour(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', levels=levels, cmap=cmap)
-    im = ax.contourf(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', levels=levels, cmap=cmap)
-    ax.set_ylabel(r'$\frac{V_0}{\Delta}$')
-    ax.set_xlabel(r'$\frac{at}{\Delta r_0}$')
-    fig.colorbar(im, ax=ax, label='uiae')
-    fig.savefig("contourf.pdf")
+    if normal_axis:
+        fig, ax = plt.subplots(1,1)
+        im = ax.pcolormesh(r0_X/10, V0_Y, EG, shading='nearest', cmap=cmap, norm=norm)
+        ax.set_ylabel(r'$V_0$ [meV]')
+        ax.set_xlabel(r'$r_0$ [nm]')
+        fig.colorbar(im, ax=ax, label=r'-1=$V_0$, 0=unconfined')
+        fig.savefig("pcolormesh_normal_axis.pdf")
+        
+        fig, ax = plt.subplots(1,1)
+        
+        #im = ax.contour(r0_X/10, V0_Y*1000, EG, shading='nearest', levels=levels, cmap=cmap)
+        im = ax.contourf(r0_X/10, V0_Y*1000, EG, shading='nearest', levels=levels, cmap=cmap)
+        ax.set_ylabel(r'$V_0$ [meV]')
+        ax.set_xlabel(r'$r_0$ [nm]')
+        fig.colorbar(im, ax=ax, label=r'-1=$V_0$, 0=unconfined')
+        fig.savefig("contourf_normal_axis.pdf")
+    else:
+        fig, ax = plt.subplots(1,1)
+        im = ax.pcolormesh(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', cmap=cmap, norm=norm)
+        ax.set_ylabel(r'$\frac{V_0}{\Delta}$')
+        ax.set_xlabel(r'$\frac{at}{\Delta r_0}$')
+        fig.colorbar(im, ax=ax, label=r'-1=$tV_0$, 0=unconfined')
+        fig.savefig("pcolormesh.pdf")
+        
+        fig, ax = plt.subplots(1,1)
+        
+        im = ax.contour(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', levels=levels, cmap=cmap)
+        im = ax.contourf(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', levels=levels, cmap=cmap)
+        ax.set_ylabel(r'$\frac{V_0}{\Delta}$')
+        ax.set_xlabel(r'$\frac{at}{\Delta r_0}$')
+        fig.colorbar(im, ax=ax, label='uiae')
+        fig.savefig("contourf.pdf")
                     
 
 if __name__ == '__main__':
-    #simple_plot(V0=500e-3, r0=10)
-    r0_ax = np.linspace(0,0.6,100, endpoint=True)
-    r0_ax = r0_ax[1:]
-    V0_ax = np.linspace(0,0.25,100, endpoint=True)
-    V0_ax = V0_ax[1:]
-    area_plot(V0_list = V0_ax*delta, r0_list=a*t/delta/r0_ax, suppress_plot=True)
+    #simple_plot(V0=30e-3, r0=10)
+    #r0_ax = np.linspace(0,0.6,15, endpoint=True)
+    #r0_ax = r0_ax[1:]
+    #r0_list = a*t/delta/r0_ax
+    r0_list = np.linspace(1, 300, 20)
+    #V0_ax = np.linspace(0,0.25,15, endpoint=True)
+    #V0_ax = V0_ax[1:]
+    #V0_list = V0_ax*delta
+    V0_list = np.linspace(100e-3, 20e-3, 20)
+    area_plot(V0_list = V0_list, r0_list=r0_list, normal_axis=True, suppress_plot=True)
+    print('finished')
