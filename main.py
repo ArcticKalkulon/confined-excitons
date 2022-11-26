@@ -111,8 +111,7 @@ def simple_plot(V0=300e-3, r0=50, suppress_plot=True): #[V0]=eV, [r0]=Angström
     return min_root
 
 
-
-def area_plot(V0_list, r0_list, normal_axis=True, suppress_plot=True):
+def area_plot(V0_list, r0_list, name, normal_axis=True, suppress_plot=True):
     r0_list = np.array(r0_list)
     V0_list = np.array(V0_list)
     r0_X, V0_Y = np.meshgrid(r0_list, V0_list)
@@ -123,27 +122,21 @@ def area_plot(V0_list, r0_list, normal_axis=True, suppress_plot=True):
             V0 = V0_Y[i][j]
             r0 = r0_X[i][j]
             min_root = simple_plot(V0=V0, r0=r0, suppress_plot=suppress_plot)
-            if normal_axis:
-                EG[i][j] = (min_root-delta/2-V0)/V0
-            else:
-                EG[i][j] = (min_root-delta/2)/V0
+            EG[i][j] = (min_root-delta/2)/V0
             print(f'V0={V0}, r0={r0}, EG = {EG[i][j]}')
     print(EG)
     
     cmap = plt.colormaps['bone']
-    if normal_axis:
-        levels = MaxNLocator(nbins=11).tick_values(-1,0.1)
-    else:
-        levels = MaxNLocator(nbins=11).tick_values(0,1.1)
+    levels = MaxNLocator(nbins=11).tick_values(0,1.1)
     norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
 
     if normal_axis:
         fig, ax = plt.subplots(1,1)
-        im = ax.pcolormesh(r0_X/10, V0_Y*1000, EG, shading='nearest', cmap=cmap, norm=norm)
+        im = ax.pcolormesh(r0_X/10, V0_Y*1000, EG, shading='nearest', cmap=cmap, norm=norm, rasterized=True)
         ax.set_ylabel(r'$V_0$ [meV]')
         ax.set_xlabel(r'$r_0$ [nm]')
-        fig.colorbar(im, ax=ax, label=r'-1=$V_0$, 0=unconfined')
-        fig.savefig("pcolormesh_normal_axis.pdf")
+        fig.colorbar(im, ax=ax, label=r'0 = $\frac{\Delta}{2}$; 1 = $\frac{\Delta}{2}$ + $V_0$')
+        fig.savefig("pcolormesh_normal_axis_"+name+".pdf")
         
         fig, ax = plt.subplots(1,1)
         
@@ -151,15 +144,15 @@ def area_plot(V0_list, r0_list, normal_axis=True, suppress_plot=True):
         im = ax.contourf(r0_X/10, V0_Y*1000, EG, shading='nearest', levels=levels, cmap=cmap)
         ax.set_ylabel(r'$V_0$ [meV]')
         ax.set_xlabel(r'$r_0$ [nm]')
-        fig.colorbar(im, ax=ax, label=r'-1=$V_0$, 0=unconfined')
-        fig.savefig("contourf_normal_axis.pdf")
+        fig.colorbar(im, ax=ax, label=r'0 = $\frac{\Delta}{2}$; 1 = $\frac{\Delta}{2}$ + $V_0$')
+        fig.savefig("contourf_normal_axis_"+name+".pdf")
     else:
         fig, ax = plt.subplots(1,1)
-        im = ax.pcolormesh(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', cmap=cmap, norm=norm)
+        im = ax.pcolormesh(a*t/delta/r0_X, V0_Y/delta, EG, shading='nearest', cmap=cmap, norm=norm, rasterized=True)
         ax.set_ylabel(r'$\frac{V_0}{\Delta}$')
         ax.set_xlabel(r'$\frac{at}{\Delta r_0}$')
         fig.colorbar(im, ax=ax, label=r'-1=$tV_0$, 0=unconfined')
-        fig.savefig("pcolormesh.pdf")
+        fig.savefig("pcolormesh_"+name+".pdf")
         
         fig, ax = plt.subplots(1,1)
         
@@ -168,7 +161,7 @@ def area_plot(V0_list, r0_list, normal_axis=True, suppress_plot=True):
         ax.set_ylabel(r'$\frac{V_0}{\Delta}$')
         ax.set_xlabel(r'$\frac{at}{\Delta r_0}$')
         fig.colorbar(im, ax=ax, label='uiae')
-        fig.savefig("contourf.pdf")
+        fig.savefig("contourf_"+name+".pdf")
                     
 
 if __name__ == '__main__':
@@ -176,10 +169,12 @@ if __name__ == '__main__':
     #r0_ax = np.linspace(0,0.6,15, endpoint=True)
     #r0_ax = r0_ax[1:]
     #r0_list = a*t/delta/r0_ax
-    r0_list = np.linspace(1, 300, 20)
+    r0_list = np.linspace(1, 1000, 200)
     #V0_ax = np.linspace(0,0.25,15, endpoint=True)
     #V0_ax = V0_ax[1:]
     #V0_list = V0_ax*delta
-    V0_list = np.linspace(100e-3, 20e-3, 20)
-    area_plot(V0_list = V0_list, r0_list=r0_list, normal_axis=True, suppress_plot=True)
+    V0_list = np.linspace(100e-3, 1e-3, 200)
+    print("big")
+    area_plot(V0_list = V0_list, r0_list=r0_list, normal_axis=True, suppress_plot=True, name="big_200")
     print('finished')
+    print(delta, a, t)
