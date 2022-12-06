@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 
-
-
 data = {"MoSe2": {"band gap": 1.47,
                   "a": 3.313,
                   "t": 0.94,
@@ -60,7 +58,6 @@ def av(E, V0):
         r = imag*np.sqrt(-condition)/a/t
     return r
 
-
 def return_function(E, V0, r0):
     AW = aw(E)
     AV = av(E, V0)
@@ -70,9 +67,8 @@ def return_function(E, V0, r0):
         print(f'AW={AW}, AV={AV}, imag*AV={imag*AV}, V0={V0}, r0={r0}')
         print('return func = ',left-right)
     return left-right
-
             
-def simple_plot(V0=300e-3, r0=50, suppress_plot=True): #[V0]=eV, [r0]=Angström
+def get_min_energy(V0=300e-3, r0=50, suppress_plot=True): #[V0]=eV, [r0]=Angström
     #V0 = 30e-3 #eV
     #r0 = 100 #Angström
     if not suppress_plot:
@@ -111,7 +107,7 @@ def simple_plot(V0=300e-3, r0=50, suppress_plot=True): #[V0]=eV, [r0]=Angström
     return min_root
 
 
-def area_plot(V0_list, r0_list, name, normal_axis=True, suppress_plot=True):
+def area_plot(V0_list, r0_list, name, normal_axis=True):
     r0_list = np.array(r0_list)
     V0_list = np.array(V0_list)
     r0_X, V0_Y = np.meshgrid(r0_list, V0_list)
@@ -121,11 +117,9 @@ def area_plot(V0_list, r0_list, name, normal_axis=True, suppress_plot=True):
             print(f'{i}/{r0_X.shape[0]}, {j}/{r0_X.shape[1]}')
             V0 = V0_Y[i][j]
             r0 = r0_X[i][j]
-            min_root = simple_plot(V0=V0, r0=r0, suppress_plot=suppress_plot)
+            min_root = get_min_energy(V0=V0, r0=r0, suppress_plot=True)
             EG[i][j] = (min_root-delta/2)/V0
-            print(f'V0={V0}, r0={r0}, EG = {EG[i][j]}')
-    print(EG)
-    
+            print(f'V0={V0}, r0={r0}, EG = {EG[i][j]}')    
     cmap = plt.colormaps['bone']
     levels = MaxNLocator(nbins=11).tick_values(0,1.1)
     norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
@@ -165,16 +159,8 @@ def area_plot(V0_list, r0_list, name, normal_axis=True, suppress_plot=True):
                     
 
 if __name__ == '__main__':
-    #simple_plot(V0=30e-3, r0=10)
-    #r0_ax = np.linspace(0,0.6,15, endpoint=True)
-    #r0_ax = r0_ax[1:]
-    #r0_list = a*t/delta/r0_ax
-    r0_list = np.linspace(1, 1000, 200)
-    #V0_ax = np.linspace(0,0.25,15, endpoint=True)
-    #V0_ax = V0_ax[1:]
-    #V0_list = V0_ax*delta
-    V0_list = np.linspace(100e-3, 1e-3, 200)
-    print("big")
-    area_plot(V0_list = V0_list, r0_list=r0_list, normal_axis=True, suppress_plot=True, name="big_200")
+    r0_list = np.linspace(1, 2000, 100) # radius in angström
+    V0_list = np.linspace(100e-3, 1e-3, 100) # meV
+    area_plot(V0_list = V0_list, r0_list=r0_list, normal_axis=True, name="default")
     print('finished')
     print(delta, a, t)
